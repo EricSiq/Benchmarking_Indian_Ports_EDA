@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
 
-st.title("Benchmarking Indian Ports: \nA Data-Driven Analysis of Operational Efficiency\n\n By:Dipti Kothari-23070126040  Eric Siqueira-23070126041"
+st.title("Benchmarking Indian Ports: \nA Data-Driven Analysis of Operational Efficiency\n\n By:Dipti Kothari-23070126040  Eric Siqueira-23070126041")
 # File uploaders for each CSV file
 trt_file = st.file_uploader("Upload TRT CSV file", type="csv")
 traffic_file = st.file_uploader("Upload Traffic CSV file", type="csv")
