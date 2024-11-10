@@ -108,3 +108,37 @@ if trt_file and traffic_file and capacity_file and utilization_file:
 
 else:
     st.write("Please upload all required CSV files.")
+def plot_metric_trends(df, metric_name):
+    plt.figure(figsize=(10, 6))
+    for port in [col for col in df.columns if col not in ['Year', 'All Ports']]:
+        plt.plot(df['Year'], df[port], label=port)
+    plt.title(f'{metric_name} Trends Across Ports')
+    plt.xlabel('Year')
+    plt.ylabel(metric_name)
+    plt.legend(loc='best')
+    plt.grid(True)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    st.pyplot(plt) 
+    plt.close()  # Close the plot to free memory
+
+# Add check for DataFrame existence before plotting
+if 'capacity_df' in locals() and capacity_df is not None:
+    st.write("Capacity Trends Across Ports")
+    plot_metric_trends(capacity_df, 'Capacity')
+
+if 'utilization_df' in locals() and utilization_df is not None:
+    st.write("Utilization Trends Across Ports")
+    plot_metric_trends(utilization_df, 'Utilization')
+
+if 'trt_df' in locals() and trt_df is not None:
+    st.write("TRT Trends Across Ports")
+    plot_metric_trends(trt_df, 'TRT')
+
+if 'output_df' in locals() and output_df is not None:
+    st.write("Output Trends Across Ports")
+    plot_metric_trends(output_df, 'Output')
+
+if 'pre_berthing_df' in locals() and pre_berthing_df is not None:
+    st.write("Pre-Berthing Trends Across Ports")
+    plot_metric_trends(pre_berthing_df, 'Pre-Berthing')
