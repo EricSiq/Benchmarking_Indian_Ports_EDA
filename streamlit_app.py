@@ -57,3 +57,44 @@ if pre_berthing_file is not None:
 if output_file is not None:
     output_df = pd.read_csv(output_file)
     display_data_info(output_df, "Output per Ship Berth Day DataFrame")
+if trt_file and traffic_file and capacity_file and utilization_file:
+    trt_df = pd.read_csv(trt_file)
+    traffic_df = pd.read_csv(traffic_file)
+    capacity_df = pd.read_csv(capacity_file)
+    utilization_df = pd.read_csv(utilization_file)
+
+    def analyze_port_statistics(port_name):
+        if port_name not in capacity_df.columns:
+            st.write(f"Port {port_name} not found in data.")
+            return pd.DataFrame()
+
+        # Extract yearly statistics for the port
+        stats_df = pd.DataFrame({
+            'Year': capacity_df['Year'],
+            'Capacity': capacity_df[port_name],
+            'Traffic': traffic_df[port_name],
+            'Utilization': utilization_df[port_name]
+        })
+
+        # Calculate year-over-year growth rates and moving averages
+        stats_df['Capacity_Growth'] = stats_df['Capacity'].pct_change() * 100
+        stats_df['Traffic_Growth'] = stats_df['Traffic'].pct_change() * 100
+        stats_df['Utilization_MA'] = stats_df['Utilization'].rolling(window=3).mean()
+
+        return stats_df
+
+    # Select a port for analysis
+    port_name = st.selectbox(
+        "Select Port",
+        options=capacity_df.columns[1:],  # Assuming first column is 'Year'
+        index=0
+    )
+
+    # Analyze and display statistics for the selected port
+    stats_df = analyze_port_statistics(port_name)
+    if not stats_df.empty:
+        st.write(f"Statistics for Port: {port_name}")
+        st.dataframe(stats_df)
+
+else:
+    st.write("Please upload all required CSV files.")
