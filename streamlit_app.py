@@ -1,14 +1,12 @@
-pip install streamlit pandas matplotlib seaborn scipy
 import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
-import ipywidgets as widgets
-from IPython.display import display, clear_output
 
 st.title("Benchmarking Indian Ports: A Data-Driven Analysis of Operational Efficiency")
+
 # File uploaders for each CSV file
 trt_file = st.file_uploader("Upload TRT CSV file", type="csv")
 traffic_file = st.file_uploader("Upload Traffic CSV file", type="csv")
