@@ -6,16 +6,16 @@ import seaborn as sns
 from scipy import stats
 
 st.title("Benchmarking Indian Ports: \nA Data-Driven Analysis of Operational Efficiency\n\n By:Dipti Kothari-23070126040  and Eric Siqueira-23070126041")
-# Define a cleaning function
+# Define the cleaning function
 def clean_dataframe(df):
-    # Strip spaces from column names
     df.columns = df.columns.str.strip()
-
-    # Apply string cleanup to all columns
-    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)  # Remove leading/trailing spaces from string values
-    df = df.applymap(lambda x: x.replace(" ", "") if isinstance(x, str) else x)  # Remove all spaces from strings
-
+    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+    df = df.applymap(lambda x: x.replace(" ", "") if isinstance(x, str) else x)
     return df
+
+# Checkbox to apply cleaning function
+clean_data = st.checkbox("Clean DataFrames (Remove spaces from column names and string values)")
+
 # File uploaders for each CSV file
 trt_file = st.file_uploader("Upload TRT CSV file", type="csv")
 traffic_file = st.file_uploader("Upload Traffic CSV file", type="csv")
@@ -24,7 +24,7 @@ utilization_file = st.file_uploader("Upload Utilization CSV file", type="csv")
 pre_berthing_file = st.file_uploader("Upload Pre-Berthing Detention CSV file", type="csv")
 output_file = st.file_uploader("Upload Output per Ship Berth Day CSV file", type="csv")
 
-# Read and display the uploaded files
+# Display the first few rows of each dataset if uploaded and optionally cleaned
 if trt_file is not None:
     trt_df = pd.read_csv(trt_file)
     if clean_data:
