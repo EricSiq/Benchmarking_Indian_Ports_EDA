@@ -145,9 +145,15 @@ if 'pre_berthing_df' in locals() and pre_berthing_df is not None:
 # Function to analyze port correlations
 def analyze_port_correlations(port_name):
     if port_name not in capacity_df.columns:
-        st.write(f"Port {port_name} not found in data.")
+        st.write(f"Port {port_name} not found in capacity data.")
         return pd.DataFrame()
 
+    # Check if output_df is defined and contains the port
+    if 'output_df' not in locals() or port_name not in output_df.columns:
+        st.write(f"Port {port_name} not found in Output data.")
+        return pd.DataFrame()
+
+    # Create the correlation dataframe only if all necessary data is available
     correlation_df = pd.DataFrame({
         'Capacity': capacity_df[port_name],
         'Traffic': traffic_df[port_name],
