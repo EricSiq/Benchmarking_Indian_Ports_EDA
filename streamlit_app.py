@@ -24,45 +24,36 @@ utilization_file = st.file_uploader("Upload Utilization CSV file", type="csv")
 pre_berthing_file = st.file_uploader("Upload Pre-Berthing Detention CSV file", type="csv")
 output_file = st.file_uploader("Upload Output per Ship Berth Day CSV file", type="csv")
 
-# Display the first few rows of each dataset if uploaded and optionally cleaned
+# Display the first few rows and check for missing values if uploaded
+def display_data_info(df, name):
+    if df is not None:
+        if clean_data:
+            df = clean_dataframe(df)
+        st.write(f"{name} - First Few Rows:")
+        st.dataframe(df.head())
+        st.write(f"Missing Values in {name}:")
+        st.write(df.isnull().sum())
+
 if trt_file is not None:
     trt_df = pd.read_csv(trt_file)
-    if clean_data:
-        trt_df = clean_dataframe(trt_df)
-    st.write("TRT DataFrame - First Few Rows:")
-    st.dataframe(trt_df.head())
+    display_data_info(trt_df, "TRT DataFrame")
 
 if traffic_file is not None:
     traffic_df = pd.read_csv(traffic_file)
-    if clean_data:
-        traffic_df = clean_dataframe(traffic_df)
-    st.write("Traffic DataFrame - First Few Rows:")
-    st.dataframe(traffic_df.head())
+    display_data_info(traffic_df, "Traffic DataFrame")
 
 if capacity_file is not None:
     capacity_df = pd.read_csv(capacity_file)
-    if clean_data:
-        capacity_df = clean_dataframe(capacity_df)
-    st.write("Capacity DataFrame - First Few Rows:")
-    st.dataframe(capacity_df.head())
+    display_data_info(capacity_df, "Capacity DataFrame")
 
 if utilization_file is not None:
     utilization_df = pd.read_csv(utilization_file)
-    if clean_data:
-        utilization_df = clean_dataframe(utilization_df)
-    st.write("Utilization DataFrame - First Few Rows:")
-    st.dataframe(utilization_df.head())
+    display_data_info(utilization_df, "Utilization DataFrame")
 
 if pre_berthing_file is not None:
     pre_berthing_df = pd.read_csv(pre_berthing_file)
-    if clean_data:
-        pre_berthing_df = clean_dataframe(pre_berthing_df)
-    st.write("Pre-Berthing Detention DataFrame - First Few Rows:")
-    st.dataframe(pre_berthing_df.head())
+    display_data_info(pre_berthing_df, "Pre-Berthing Detention DataFrame")
 
 if output_file is not None:
     output_df = pd.read_csv(output_file)
-    if clean_data:
-        output_df = clean_dataframe(output_df)
-    st.write("Output per Ship Berth Day DataFrame - First Few Rows:")
-    st.dataframe(output_df.head())
+    display_data_info(output_df, "Output per Ship Berth Day DataFrame")
