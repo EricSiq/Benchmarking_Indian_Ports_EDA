@@ -1,4 +1,4 @@
-!pip install streamlit pandas matplotlib seaborn scipy
+pip install streamlit pandas matplotlib seaborn scipy
 import streamlit as st
 import pandas as pd
 import numpy as np
