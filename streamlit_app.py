@@ -142,3 +142,47 @@ if 'output_df' in locals() and output_df is not None:
 if 'pre_berthing_df' in locals() and pre_berthing_df is not None:
     st.write("Pre-Berthing Trends Across Ports")
     plot_metric_trends(pre_berthing_df, 'Pre-Berthing')
+# Function to analyze port correlations
+def analyze_port_correlations(port_name):
+    if port_name not in capacity_df.columns:
+        st.write(f"Port {port_name} not found in data.")
+        return pd.DataFrame()
+
+    correlation_df = pd.DataFrame({
+        'Capacity': capacity_df[port_name],
+        'Traffic': traffic_df[port_name],
+        'Utilization': utilization_df[port_name],
+        'TRT': trt_df[port_name],
+        'Output': output_df[port_name]
+    })
+
+    return correlation_df.corr()
+
+# Calculate correlations for each port
+port_correlations = {
+    'Kolkata': analyze_port_correlations('Kolkata'),
+    'Haldia': analyze_port_correlations('Haldia'),
+    'Paradip': analyze_port_correlations('Paradip'),
+    'Vishakhapatnam': analyze_port_correlations('Vishakhapatnam'),
+    'Ennore': analyze_port_correlations('Ennore'),
+    'Chennai': analyze_port_correlations('Chennai'),
+    'Tuticorin': analyze_port_correlations('Tuticorin'),
+    'Cochin': analyze_port_correlations('Cochin'),
+    'New Mangalore': analyze_port_correlations('New Mangalore'),
+    'Mormugoa': analyze_port_correlations('Mormugoa'),
+    'J.L.Nehru': analyze_port_correlations('J.L.Nehru'),
+    'Mumbai': analyze_port_correlations('Mumbai'),
+    'Kandla': analyze_port_correlations('Kandla')
+}
+
+# Streamlit select box for choosing a port
+selected_port = st.selectbox("Select Port for Correlation Analysis:", list(port_correlations.keys()))
+
+# Display correlation analysis for the selected port
+if selected_port:
+    st.write(f"Correlation Analysis for {selected_port}:")
+    correlation_data = port_correlations.get(selected_port)
+    if not correlation_data.empty:
+        st.dataframe(correlation_data)  # Display correlation table
+    else:
+        st.write("No correlation data available for this port.")
