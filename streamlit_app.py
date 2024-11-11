@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
-from IPython.display import display
 
 st.title("Benchmarking Indian Ports: \nA Data-Driven Analysis of Operational Efficiency\n\n By:Dipti Kothari-23070126040 and Eric Siqueira-23070126041")
 
@@ -180,8 +179,6 @@ def plot_port_comparison(metric_df, year, metric_name):
     st.pyplot(plt)  # Use Streamlit's built-in pyplot to display plots
     plt.close()
 
-# Assuming you have the DataFrames like capacity_df, traffic_df, etc.
-
 # Streamlit dropdown for selecting year
 year_options = [str(year) for year in capacity_df['Year'].unique()]
 selected_year = st.selectbox('Select Year:', year_options)
@@ -195,5 +192,4 @@ if selected_year:
     plot_port_comparison(traffic_df, selected_year, 'Traffic')
     plot_port_comparison(utilization_df, selected_year, 'Utilization')
     plot_port_comparison(trt_df, selected_year, 'TRT')
-    plot_port_comparison(output_df, selected_year, 'Output')
-    plot_port_comparison(pre_berthing_df, selected_year, 'Pre-Berthing')
+    plot_port_comparison(output_df,
