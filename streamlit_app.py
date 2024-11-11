@@ -69,9 +69,8 @@ if output_file is not None:
     display_data_info(output_df, "Output per Ship Berth Day DataFrame")
 
 # Analysis section
-if trt_file and traffic_file and capacity_file and utilization_file:
-    # Ensure all DataFrames are loaded successfully
-    if all([trt_df is not None, traffic_df is not None, capacity_df is not None, utilization_df is not None]):
+if all([trt_file, traffic_file, capacity_file, utilization_file, output_file]):
+    if all([trt_df is not None, traffic_df is not None, capacity_df is not None, utilization_df is not None, output_df is not None]):
         
         def analyze_port_statistics(port_name):
             if port_name not in capacity_df.columns:
@@ -106,9 +105,7 @@ if trt_file and traffic_file and capacity_file and utilization_file:
             st.write(f"Statistics for Port: {port_name}")
             st.dataframe(stats_df)
 
-else:
-    st.write("Please upload all required CSV files.")
-
+# Plotting function
 def plot_metric_trends(df, metric_name):
     plt.figure(figsize=(10, 6))
     for port in [col for col in df.columns if col not in ['Year', 'All Ports']]:
@@ -120,10 +117,10 @@ def plot_metric_trends(df, metric_name):
     plt.grid(True)
     plt.xticks(rotation=45)
     plt.tight_layout()
-    st.pyplot(plt) 
+    st.pyplot(plt)
     plt.close()  # Close the plot to free memory
 
-# Add check for DataFrame existence before plotting
+# Plotting the trends for available data
 if 'capacity_df' in locals() and capacity_df is not None:
     st.write("Capacity Trends Across Ports")
     plot_metric_trends(capacity_df, 'Capacity')
@@ -146,9 +143,13 @@ if 'pre_berthing_df' in locals() and pre_berthing_df is not None:
 
 # Function to analyze port correlations
 def analyze_port_correlations(port_name):
-    # Check if port exists in capacity_df and output_df
-    if port_name not in capacity_df.columns or port_name not in output_df.columns:
-        st.write(f"Port {port_name} not found in capacity or output data.")
+    if port_name not in capacity_df.columns:
+        st.write(f"Port {port_name} not found in capacity data.")
+        return pd.DataFrame()
+
+    # Check if output_df is defined and contains the port
+    if 'output_df' not in locals() or port_name not in output_df.columns:
+        st.write(f"Port {port_name} not found in Output data.")
         return pd.DataFrame()
 
     # Create the correlation dataframe only if all necessary data is available
@@ -162,19 +163,22 @@ def analyze_port_correlations(port_name):
 
     return correlation_df.corr()
 
-# Calculate correlations for each port dynamically based on available ports
-available_ports = [port for port in ['Kolkata', 'Haldia', 'Paradip', 'Vishakhapatnam', 'Ennore', 'Chennai', 'Tuticorin', 
-                                     'Cochin', 'New Mangalore', 'Mormugoa', 'J.L.Nehru', 'Mumbai', 'Kandla'] 
-                   if port in capacity_df.columns and port in output_df.columns]
+# Create a list of available ports for correlation analysis
+if 'capacity_df' in locals() and 'output_df' in locals():
+    available_ports = [port for port in ['Kolkata', 'Haldia', 'Paradip', 'Vishakhapatnam', 'Ennore', 'Chennai', 'Tuticorin', 
+                                         'Cochin', 'New Mangalore', 'Mormugoa', 'J.L.Nehru', 'Mumbai', 'Kandla'] 
+                       if port in capacity_df.columns and port in output_df.columns]
 
-# Streamlit select box for choosing a port
-selected_port = st.selectbox("Select Port for Correlation Analysis:", available_ports)
+    # Streamlit select box for choosing a port
+    selected_port = st.selectbox("Select Port for Correlation Analysis:", available_ports)
 
-# Display correlation analysis for the selected port
-if selected_port:
-    st.write(f"Correlation Analysis for {selected_port}:")
-    correlation_data = analyze_port_correlations(selected_port)
-    if not correlation_data.empty:
-        st.dataframe(correlation_data)  # Display correlation table
-    else:
-        st.write("No correlation data available for this port.")
+    # Display correlation analysis for the selected port
+    if selected_port:
+        st.write(f"Correlation Analysis for {selected_port}:")
+        correlation_data = analyze_port_correlations(selected_port)
+        if not correlation_data.empty:
+            st.dataframe(correlation_data)  # Display correlation table
+        else:
+            st.write("No correlation data available for this port.")
+else:
+    st.write("Please upload the required files for analysis.")
