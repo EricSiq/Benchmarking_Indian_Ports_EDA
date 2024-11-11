@@ -169,15 +169,33 @@ def plot_port_comparison(metric_df, year, metric_name):
         value_vars=[col for col in metric_df.columns if col not in ['Year', 'All Ports']]
     )
 
-    plt.figure(figsize=(15, 6))
-    sns.barplot(x='variable', y='value', data=year_data)
-    plt.title(f'{metric_name} Comparison Across Ports ({year})')
+    def analyze_trt_performance(trt_df):
+    # Calculate average TRT for each port
+    port_cols = [col for col in trt_df.columns if col not in ['Year', 'All Ports']]
+    avg_trt = trt_df[port_cols].mean().sort_values()
+
+    # Calculate TRT trend (improvement rate)
+    trt_trend = trt_df[port_cols].apply(lambda x: stats.linregress(range(len(x)), x)[0])
+
+    # Create performance summary
+    performance_summary = pd.DataFrame({
+        'Average_TRT': avg_trt,
+        'TRT_Trend': trt_trend
+    })
+
+    # Plot average TRT comparison
+    plt.figure(figsize=(12, 6))
+    sns.barplot(x=avg_trt.index, y=avg_trt.values)
+    plt.title('Average Turn Round Time by Port')
     plt.xticks(rotation=45)
-    plt.xlabel('Ports')
-    plt.ylabel(metric_name)
+    plt.ylabel('Average TRT (days)')
+    plt.xlabel('Port')
     plt.tight_layout()
-    st.pyplot(plt)  # Use Streamlit's built-in pyplot to display plots
-    plt.close()
+
+    # Display the plot using Streamlit's pyplot function
+    st.pyplot(plt)
+
+    return performance_summary
 
 # Streamlit dropdown for selecting year
 if 'capacity_df' in locals() and capacity_df is not None:
