@@ -213,4 +213,5 @@ if 'capacity_df' in locals() and capacity_df is not None:
 
 # Check if all columns in trt_df are numeric, and convert them to numeric if needed
 if trt_df is not None:
-    # Convert all columns to numeric (ignoring errors for non-numeric
+    # Convert all columns to numeric (ignoring errors for non-numeric)
+    trt_df = trt_df.apply(pd.to_numeric, errors='ignore')
