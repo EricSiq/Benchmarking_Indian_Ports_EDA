@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
-import ipywidgets as widgets
 from IPython.display import display
 
 st.title("Benchmarking Indian Ports: \nA Data-Driven Analysis of Operational Efficiency\n\n By:Dipti Kothari-23070126040 and Eric Siqueira-23070126041")
@@ -178,31 +177,23 @@ def plot_port_comparison(metric_df, year, metric_name):
     plt.xlabel('Ports')
     plt.ylabel(metric_name)
     plt.tight_layout()
-    plt.show()
+    st.pyplot(plt)  # Use Streamlit's built-in pyplot to display plots
+    plt.close()
 
-# Create the dropdown for selecting year
-year_dropdown = widgets.Dropdown(
-    options=[str(year) for year in capacity_df['Year'].unique()],
-    description='Select Year:',
-    disabled=False
-)
+# Assuming you have the DataFrames like capacity_df, traffic_df, etc.
 
-output = widgets.Output()
+# Streamlit dropdown for selecting year
+year_options = [str(year) for year in capacity_df['Year'].unique()]
+selected_year = st.selectbox('Select Year:', year_options)
 
-# Function to update the plot based on the selected year
-def update_plot(change):
-    year = change['new']
-    # Call plot_port_comparison for each feature
-    plt.figure(figsize=(15, 6))
-    plot_port_comparison(capacity_df, year, 'Capacity')
-    plot_port_comparison(traffic_df, year, 'Traffic')
-    plot_port_comparison(utilization_df, year, 'Utilization')
-    plot_port_comparison(trt_df, year, 'TRT')
-    plot_port_comparison(output_df, year, 'Output')
-    plot_port_comparison(pre_berthing_df, year, 'Pre-Berthing')
-
-# Bind the year dropdown to the update_plot function
-year_dropdown.observe(update_plot, names='value')
-
-# Display the dropdown and output area
-display(year_dropdown, output)
+# Display and update plots based on selected year
+if selected_year:
+    st.write(f"Showing data for the year: {selected_year}")
+    
+    # Plot each metric for the selected year
+    plot_port_comparison(capacity_df, selected_year, 'Capacity')
+    plot_port_comparison(traffic_df, selected_year, 'Traffic')
+    plot_port_comparison(utilization_df, selected_year, 'Utilization')
+    plot_port_comparison(trt_df, selected_year, 'TRT')
+    plot_port_comparison(output_df, selected_year, 'Output')
+    plot_port_comparison(pre_berthing_df, selected_year, 'Pre-Berthing')
