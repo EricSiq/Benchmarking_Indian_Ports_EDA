@@ -317,4 +317,50 @@ def analyze_output_efficiency(output_df, capacity_df):
 # Assuming output_df and capacity_df are already defined and contain the necessary data
 analyze_output_efficiency(output_df, capacity_df)
 
+def compare_output_efficiency_across_capacity_groups(output_df, capacity_df, capacity_thresholds):
+    """Compares output per ship berth day across ports of similar size (capacity)."""
     
+    # Identify port columns
+    port_cols = [col for col in output_df.columns if col not in ['Year', 'All Ports']]
+    
+    # Calculate average output per ship berth day for each port
+    avg_output = output_df[port_cols].mean()
+    
+    # Calculate average capacity for each port
+    avg_capacity = capacity_df[port_cols].mean()
+    
+    # Create a DataFrame to store output and capacity information
+    comparison_df = pd.DataFrame({
+        'Output per Ship Berth Day': avg_output,
+        'Capacity': avg_capacity
+    })
+    
+    # Categorize ports based on capacity thresholds (e.g., small, medium, large ports)
+    comparison_df['Capacity Group'] = pd.cut(comparison_df['Capacity'], bins=capacity_thresholds, labels=["Small", "Medium", "Large"])
+    
+    # Calculate output efficiency within each capacity group
+    efficiency_by_group = comparison_df.groupby('Capacity Group').mean()
+    
+    # Plot comparison of output per ship berth day across capacity groups
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x=efficiency_by_group.index, y=efficiency_by_group['Output per Ship Berth Day'])
+    plt.title('Output per Ship Berth Day by Port Capacity Group')
+    plt.xlabel('Capacity Group')
+    plt.ylabel('Average Output per Ship Berth Day')
+    plt.tight_layout()
+    st.pyplot(plt)
+    
+    return comparison_df, efficiency_by_group
+
+# Example usage:
+# Assuming output_df and capacity_df are already loaded, and capacity thresholds are defined
+capacity_thresholds = [0, 500000, 1000000, 2000000]  # Define thresholds for small, medium, and large ports
+comparison_df, efficiency_by_group = compare_output_efficiency_across_capacity_groups(output_df, capacity_df, capacity_thresholds)
+
+# Display the comparison data
+st.write("Port Comparison by Capacity Group:")
+st.dataframe(comparison_df)
+
+st.write("Efficiency by Capacity Group:")
+st.dataframe(efficiency_by_group)
+
