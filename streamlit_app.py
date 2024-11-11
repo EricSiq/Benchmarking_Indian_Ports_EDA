@@ -94,63 +94,59 @@ def plot_port_comparison(df, selected_year, metric_name):
     else:
         st.write(f"No data available for the selected year: {selected_year}")
 
-# Function to safely check if the dataframe is available
-def is_dataframe_available(df):
-    return df is not None and isinstance(df, pd.DataFrame) and not df.empty
+# Streamlit dropdown for selecting year
+if capacity_df is not None:
+    year_options = [str(year) for year in capacity_df['Year'].unique()]
+    selected_year = st.selectbox('Select Year:', year_options)
 
-# Streamlit dropdown for selecting year and plotting data based on the selected year
-if capacity_file is not None:
-    if is_dataframe_available(capacity_df) and 'Year' in capacity_df.columns:
-        year_options = [str(year) for year in capacity_df['Year'].unique()]
-        selected_year = st.selectbox('Select Year:', year_options)
+    # Display and update plots based on selected year
+    if selected_year:
+        st.write(f"Showing data for the year: {selected_year}")
+        
+        # Plot each metric for the selected year
+        if capacity_df is not None:
+            plot_port_comparison(capacity_df, selected_year, 'Capacity')
+        if traffic_df is not None:
+            plot_port_comparison(traffic_df, selected_year, 'Traffic')
+        if utilization_df is not None:
+            plot_port_comparison(utilization_df, selected_year, 'Utilization')
+        if trt_df is not None:
+            plot_port_comparison(trt_df, selected_year, 'TRT')
+        if output_df is not None:
+            plot_port_comparison(output_df, selected_year, 'Output')
 
-        # Display and update plots based on selected year
-        if selected_year:
-            st.write(f"Showing data for the year: {selected_year}")
+# Analyze Turn Round Time (TRT) performance
+def analyze_trt_performance(trt_df):
+    # Calculate average TRT for each port
+    port_cols = [col for col in trt_df.columns if col not in ['Year', 'All Ports']]
+    avg_trt = trt_df[port_cols].mean().sort_values()
 
-            # Plot each metric for the selected year
-            if is_dataframe_available(capacity_df):
-                plot_port_comparison(capacity_df, selected_year, 'Capacity')
-            if is_dataframe_available(traffic_df):
-                plot_port_comparison(traffic_df, selected_year, 'Traffic')
-            if is_dataframe_available(utilization_df):
-                plot_port_comparison(utilization_df, selected_year, 'Utilization')
-            if is_dataframe_available(trt_df):
-                plot_port_comparison(trt_df, selected_year, 'TRT')
-            if is_dataframe_available(output_df):
-                plot_port_comparison(output_df, selected_year, 'Output')
+    # Calculate TRT trend (improvement rate)
+    trt_trend = trt_df[port_cols].apply(lambda x: stats.linregress(range(len(x)), x)[0])
 
-# Plotting trends for available data
-if is_dataframe_available(capacity_df):
-    st.write("Capacity Trends Across Ports")
-    plot_metric_trends(capacity_df, 'Capacity')
+    # Create performance summary
+    performance_summary = pd.DataFrame({
+        'Average_TRT': avg_trt,
+        'TRT_Trend': trt_trend
+    })
 
-if is_dataframe_available(utilization_df):
-    st.write("Utilization Trends Across Ports")
-    plot_metric_trends(utilization_df, 'Utilization')
-
-if is_dataframe_available(traffic_df):
-    st.write("Traffic Trends Across Ports")
-    plot_metric_trends(traffic_df, 'Traffic')
-
-if is_dataframe_available(output_df):
-    st.write("Output per Ship Berth Day Trends Across Ports")
-    plot_metric_trends(output_df, 'Output')
-
-# Function to plot trends across ports
-def plot_metric_trends(df, metric_name):
-    plt.figure(figsize=(10, 6))
-    for port in [col for col in df.columns if col not in ['Year', 'All Ports']]:
-        plt.plot(df['Year'], df[port], label=port)
-    plt.title(f'{metric_name} Trends Across Ports')
-    plt.xlabel('Year')
-    plt.ylabel(metric_name)
-    plt.legend(loc='best')
-    plt.grid(True)
+    # Plot average TRT comparison
+    plt.figure(figsize=(12, 6))
+    sns.barplot(x=avg_trt.index, y=avg_trt.values)
+    plt.title('Average Turn Round Time by Port')
     plt.xticks(rotation=45)
+    plt.ylabel('Average TRT (days)')
+    plt.xlabel('Port')
     plt.tight_layout()
+
+    # Display plot using Streamlit
     st.pyplot(plt)
-    plt.close()  # Close the plot to free memory
+
+    return performance_summary
+
+# Proceed if TRT data is available
+if trt_df is not None:
+    analyze_trt_performance(trt_df)
 
 # Additional analysis for ports
 if all([trt_file, traffic_file, capacity_file, utilization_file, output_file]):
@@ -188,3 +184,35 @@ if all([trt_file, traffic_file, capacity_file, utilization_file, output_file]):
         if not stats_df.empty:
             st.write(f"Statistics for Port: {port_name}")
             st.dataframe(stats_df)
+
+# Function to plot trends across ports
+def plot_metric_trends(df, metric_name):
+    plt.figure(figsize=(10, 6))
+    for port in [col for col in df.columns if col not in ['Year', 'All Ports']]:
+        plt.plot(df['Year'], df[port], label=port)
+    plt.title(f'{metric_name} Trends Across Ports')
+    plt.xlabel('Year')
+    plt.ylabel(metric_name)
+    plt.legend(loc='best')
+    plt.grid(True)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    st.pyplot(plt)
+    plt.close()  # Close the plot to free memory
+
+# Plotting trends for available data
+if 'capacity_df' in locals() and capacity_df is not None:
+    st.write("Capacity Trends Across Ports")
+    plot_metric_trends(capacity_df, 'Capacity')
+
+if 'utilization_df' in locals() and utilization_df is not None:
+    st.write("Utilization Trends Across Ports")
+    plot_metric_trends(utilization_df, 'Utilization')
+
+if 'traffic_df' in locals() and traffic_df is not None:
+    st.write("Traffic Trends Across Ports")
+    plot_metric_trends(traffic_df, 'Traffic')
+
+if 'output_df' in locals() and output_df is not None:
+    st.write("Output per Ship Berth Day Trends Across Ports")
+    plot_metric_trends(output_df, 'Output')
