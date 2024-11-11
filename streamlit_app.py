@@ -193,4 +193,32 @@ if selected_year:
     plot_port_comparison(utilization_df, selected_year, 'Utilization')
     plot_port_comparison(trt_df, selected_year, 'TRT')
     plot_port_comparison(output_df, selected_year, 'Output')
+    
+print("How does Turn Round Time (TRT) vary across major ports, and which ports consistently show the best performance?")
+def analyze_trt_performance(trt_df):
+    # Calculate average TRT for each port
+    port_cols = [col for col in trt_df.columns if col not in ['Year', 'All Ports']]
+    avg_trt = trt_df[port_cols].mean().sort_values()
 
+    # Calculate TRT trend (improvement rate)
+    trt_trend = trt_df[port_cols].apply(lambda x: stats.linregress(range(len(x)), x)[0])
+
+    # Create performance summary
+    performance_summary = pd.DataFrame({
+        'Average_TRT': avg_trt,
+        'TRT_Trend': trt_trend
+    })
+
+    # Plot average TRT comparison
+    plt.figure(figsize=(12, 6))
+    sns.barplot(x=avg_trt.index, y=avg_trt.values)
+    plt.title('Average Turn Round Time by Port')
+    plt.xticks(rotation=45)
+    plt.ylabel('Average TRT (days)')
+    plt.xlabel('Port')
+    plt.tight_layout()
+    
+    # Display plot using Streamlit
+    st.pyplot(plt)
+    
+    return performance_summary
