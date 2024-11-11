@@ -40,11 +40,8 @@ def safe_read_csv(file):
 # Ensure TRT dataframe is loaded
 if trt_file is not None:
     trt_df = safe_read_csv(trt_file)
-    if trt_df is not None:
-        st.write("TRT DataFrame Loaded Successfully!")
-        analyze_trt_performance(trt_df)
-    else:
-        st.write("Failed to load TRT DataFrame.")
+    st.write("TRT DataFrame Loaded Successfully!")
+    analyze_trt_performance(trt_df)
 else:
     st.write("Please upload the TRT file to proceed.")
 # Function to analyze Turn Round Time (TRT) performance
