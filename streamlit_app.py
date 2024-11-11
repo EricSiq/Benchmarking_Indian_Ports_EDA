@@ -5,20 +5,20 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
 
-# Streamlit Title
+# Title
 st.title("Benchmarking Indian Ports: \nA Data-Driven Analysis of Operational Efficiency\n\n By: Dipti Kothari-23070126040 and Eric Siqueira-23070126041")
 
-# Define the cleaning function for the data
+# Function to clean the dataframe
 def clean_dataframe(df):
     df.columns = df.columns.str.strip()
     df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
     df = df.applymap(lambda x: x.replace(" ", "") if isinstance(x, str) else x)
     return df
 
-# Checkbox to apply cleaning function
+# Checkbox to clean dataframes
 clean_data = st.checkbox("Clean DataFrames (Remove spaces from column names and string values)")
 
-# File uploaders for each CSV file
+# File uploaders for CSV files
 trt_file = st.file_uploader("Upload TRT CSV file", type="csv")
 traffic_file = st.file_uploader("Upload Traffic CSV file", type="csv")
 capacity_file = st.file_uploader("Upload Capacity CSV file", type="csv")
@@ -26,7 +26,7 @@ utilization_file = st.file_uploader("Upload Utilization CSV file", type="csv")
 pre_berthing_file = st.file_uploader("Upload Pre-Berthing Detention CSV file", type="csv")
 output_file = st.file_uploader("Upload Output per Ship Berth Day CSV file", type="csv")
 
-# Function to read a CSV file and handle EmptyDataError
+# Function to safely read CSV files
 def safe_read_csv(file):
     try:
         return pd.read_csv(file)
@@ -34,7 +34,7 @@ def safe_read_csv(file):
         st.write(f"Error: The uploaded file {file.name} is empty. Please upload a valid file.")
         return None
 
-# Display the first few rows and check for missing values if uploaded
+# Display information about the uploaded data
 def display_data_info(df, name):
     if df is not None:
         if clean_data:
@@ -44,7 +44,7 @@ def display_data_info(df, name):
         st.write(f"Missing Values in {name}:")
         st.write(df.isnull().sum())
 
-# Read and display each dataset with error handling for empty files
+# Read and display each dataset
 if trt_file is not None:
     trt_df = safe_read_csv(trt_file)
     display_data_info(trt_df, "TRT DataFrame")
@@ -69,13 +69,8 @@ if output_file is not None:
     output_df = safe_read_csv(output_file)
     display_data_info(output_df, "Output per Ship Berth Day DataFrame")
 
-# Function to analyze TRT performance and trends
+# Analyze Turn Round Time (TRT) performance
 def analyze_trt_performance(trt_df):
-    # Ensure trt_df has valid data
-    if trt_df is None or trt_df.empty:
-        st.error("TRT DataFrame is empty or not available.")
-        return pd.DataFrame()
-
     # Calculate average TRT for each port
     port_cols = [col for col in trt_df.columns if col not in ['Year', 'All Ports']]
     avg_trt = trt_df[port_cols].mean().sort_values()
@@ -98,46 +93,53 @@ def analyze_trt_performance(trt_df):
     plt.xlabel('Port')
     plt.tight_layout()
 
-    # Display the plot using Streamlit's pyplot function
+    # Display plot using Streamlit
     st.pyplot(plt)
 
     return performance_summary
 
-# Main section to handle file uploads and display data
-if trt_file is not None:
-    trt_df = safe_read_csv(trt_file)  # Load the TRT data
-    if trt_df is not None:
-        st.write("TRT DataFrame loaded successfully.")
-        display_data_info(trt_df, "TRT DataFrame")  # Display basic info about the file
+# Proceed if TRT data is available
+if trt_df is not None:
+    analyze_trt_performance(trt_df)
 
-        # Call the analysis function to calculate and display performance summary
-        performance_summary = analyze_trt_performance(trt_df)
-        if not performance_summary.empty:
-            st.write("TRT Performance Summary:")
-            st.dataframe(performance_summary)
+# Additional analysis for ports
+if all([trt_file, traffic_file, capacity_file, utilization_file, output_file]):
+    if all([trt_df is not None, traffic_df is not None, capacity_df is not None, utilization_df is not None, output_df is not None]):
+        
+        def analyze_port_statistics(port_name):
+            if port_name not in capacity_df.columns:
+                st.write(f"Port {port_name} not found in data.")
+                return pd.DataFrame()
 
-# Function to analyze port statistics
-def analyze_port_statistics(port_name):
-    if port_name not in capacity_df.columns:
-        st.write(f"Port {port_name} not found in data.")
-        return pd.DataFrame()
+            # Extract yearly statistics for the port
+            stats_df = pd.DataFrame({
+                'Year': capacity_df['Year'],
+                'Capacity': capacity_df[port_name],
+                'Traffic': traffic_df[port_name],
+                'Utilization': utilization_df[port_name]
+            })
 
-    # Extract yearly statistics for the port
-    stats_df = pd.DataFrame({
-        'Year': capacity_df['Year'],
-        'Capacity': capacity_df[port_name],
-        'Traffic': traffic_df[port_name],
-        'Utilization': utilization_df[port_name]
-    })
+            # Calculate year-over-year growth rates and moving averages
+            stats_df['Capacity_Growth'] = stats_df['Capacity'].pct_change() * 100
+            stats_df['Traffic_Growth'] = stats_df['Traffic'].pct_change() * 100
+            stats_df['Utilization_MA'] = stats_df['Utilization'].rolling(window=3).mean()
 
-    # Calculate year-over-year growth rates and moving averages
-    stats_df['Capacity_Growth'] = stats_df['Capacity'].pct_change() * 100
-    stats_df['Traffic_Growth'] = stats_df['Traffic'].pct_change() * 100
-    stats_df['Utilization_MA'] = stats_df['Utilization'].rolling(window=3).mean()
+            return stats_df
 
-    return stats_df
+        # Select a port for analysis
+        port_name = st.selectbox(
+            "Select Port",
+            options=capacity_df.columns[1:],  # Assuming first column is 'Year'
+            index=0
+        )
 
-# Plotting function
+        # Analyze and display statistics for the selected port
+        stats_df = analyze_port_statistics(port_name)
+        if not stats_df.empty:
+            st.write(f"Statistics for Port: {port_name}")
+            st.dataframe(stats_df)
+
+# Function to plot trends across ports
 def plot_metric_trends(df, metric_name):
     plt.figure(figsize=(10, 6))
     for port in [col for col in df.columns if col not in ['Year', 'All Ports']]:
@@ -152,7 +154,7 @@ def plot_metric_trends(df, metric_name):
     st.pyplot(plt)
     plt.close()  # Close the plot to free memory
 
-# Plotting the trends for available data
+# Plotting trends for available data
 if 'capacity_df' in locals() and capacity_df is not None:
     st.write("Capacity Trends Across Ports")
     plot_metric_trends(capacity_df, 'Capacity')
@@ -195,43 +197,17 @@ def analyze_port_correlations(port_name):
 
     return correlation_df.corr()
 
-# Function to plot data for a specific year across ports
-def plot_port_comparison(df, selected_year, metric_name):
-    # Ensure 'Year' column is numeric and handle invalid data
-    try:
-        # Convert 'Year' to numeric, invalid values will be converted to NaN
-        df['Year'] = pd.to_numeric(df['Year'], errors='coerce')
-    except Exception as e:
-        st.error(f"Error converting 'Year' column to numeric: {e}")
-        return
+# Streamlit dropdown for selecting year
+year_options = [str(year) for year in capacity_df['Year'].unique()]
+selected_year = st.selectbox('Select Year:', year_options)
+
+# Display and update plots based on selected year
+if selected_year:
+    st.write(f"Showing data for the year: {selected_year}")
     
-    # Handle NaN values in 'Year' column (they were invalid in the original data)
-    if df['Year'].isnull().any():
-        st.error("The 'Year' column contains invalid or missing values.")
-        return
-
-    # Check if selected_year is valid and if it exists in the data
-    if selected_year not in df['Year'].values:
-        st.error(f"Selected year {selected_year} is not present in the data.")
-        return
-
-    # Filter data for the selected year
-    year_df = df[df['Year'] == int(selected_year)]
-
-    # Handle case where no data is found for the selected year
-    if year_df.empty:
-        st.write(f"No data available for the year {selected_year}.")
-        return
-
-    # Plot the data for each port in the selected year
-    plt.figure(figsize=(10, 6))
-    ports = [col for col in year_df.columns if col != 'Year']  # Exclude the 'Year' column
-    for port in ports:
-        plt.plot(year_df['Year'], year_df[port], label=port)
-    plt.title(f'{metric_name} for Ports in {selected_year}')
-    plt.xlabel('Port')
-    plt.ylabel(metric_name)
-    plt.xticks(rotation=45)
-    plt.legend(loc='best')
-    plt.tight_layout()
-    st.pyplot(plt)
+    # Plot each metric for the selected year
+    plot_port_comparison(capacity_df, selected_year, 'Capacity')
+    plot_port_comparison(traffic_df, selected_year, 'Traffic')
+    plot_port_comparison(utilization_df, selected_year, 'Utilization')
+    plot_port_comparison(trt_df, selected_year, 'TRT')
+    plot_port_comparison(output_df, selected_year, 'Output')
