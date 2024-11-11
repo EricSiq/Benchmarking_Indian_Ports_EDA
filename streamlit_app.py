@@ -194,9 +194,19 @@ def analyze_port_correlations(port_name):
     })
 
     return correlation_df.corr()
+# Function to plot data for a specific year across ports
 def plot_port_comparison(df, selected_year, metric_name):
     # Ensure 'Year' column is numeric and handle invalid data
-    df['Year'] = pd.to_numeric(df['Year'], errors='coerce')  # Convert 'Year' to numeric, invalid values become NaN
+    try:
+        df['Year'] = pd.to_numeric(df['Year'], errors='coerce')  # Convert 'Year' to numeric, invalid values become NaN
+    except Exception as e:
+        st.error(f"Error converting 'Year' column to numeric: {e}")
+        return
+
+    # Handle NaN values in 'Year' column (they were invalid in the original data)
+    if df['Year'].isnull().any():
+        st.error("The 'Year' column contains invalid or missing values.")
+        return
 
     # Check if selected_year is valid
     try:
@@ -204,7 +214,7 @@ def plot_port_comparison(df, selected_year, metric_name):
     except ValueError:
         st.error("Invalid year selected.")
         return
-    
+
     # Filter data for the selected year
     year_df = df[df['Year'] == selected_year]
 
@@ -212,7 +222,7 @@ def plot_port_comparison(df, selected_year, metric_name):
     if year_df.empty:
         st.write(f"No data available for the year {selected_year}.")
         return
-    
+
     # Plot the data for each port in the selected year
     plt.figure(figsize=(10, 6))
     ports = [col for col in year_df.columns if col != 'Year']  # Exclude the 'Year' column
@@ -226,6 +236,7 @@ def plot_port_comparison(df, selected_year, metric_name):
     plt.tight_layout()
     st.pyplot(plt)
     plt.close()  # Close the plot to free memory
+    
 # Main code for Streamlit app
 if 'capacity_df' in locals() and capacity_df is not None:
     year_options = [str(year) for year in capacity_df['Year'].unique()]
