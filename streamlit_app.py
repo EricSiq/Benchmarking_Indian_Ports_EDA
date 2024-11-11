@@ -235,4 +235,3 @@ def plot_port_comparison(df, selected_year, metric_name):
     plt.legend(loc='best')
     plt.tight_layout()
     st.pyplot(plt)
-    plt.close()  # Close the plot to free memory
