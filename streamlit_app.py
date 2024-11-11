@@ -163,19 +163,44 @@ def analyze_port_correlations(port_name):
 
     return correlation_df.corr()
 
-# Create a list of available ports for correlation analysis
-    available_ports = [port for port in ['Kolkata', 'Haldia', 'Paradip', 'Vishakhapatnam', 'Ennore', 'Chennai', 'Tuticorin', 
-                                         'Cochin', 'New Mangalore', 'Mormugoa', 'J.L.Nehru', 'Mumbai', 'Kandla'] 
-                       if port in capacity_df.columns and port in output_df.columns]
+def plot_port_comparison(metric_df, year, metric_name):
+    year_data = metric_df[metric_df['Year'] == year].melt(
+        id_vars=['Year'],
+        value_vars=[col for col in metric_df.columns if col not in ['Year', 'All Ports']]
+    )
 
-    # Streamlit select box for choosing a port
-    selected_port = st.selectbox("Select Port for Correlation Analysis:", available_ports)
+    plt.figure(figsize=(15, 6))
+    sns.barplot(x='variable', y='value', data=year_data)
+    plt.title(f'{metric_name} Comparison Across Ports ({year})')
+    plt.xticks(rotation=45)
+    plt.xlabel('Ports')
+    plt.ylabel(metric_name)
+    plt.tight_layout()
+    plt.show()
 
-    # Display correlation analysis for the selected port
-    if selected_port:
-        st.write(f"Correlation Analysis for {selected_port}:")
-        correlation_data = analyze_port_correlations(selected_port)
-        if not correlation_data.empty:
-            st.dataframe(correlation_data)  # Display correlation table
-        else:
-            st.write("No correlation data available for this port.")
+# Create the dropdown for selecting year
+year_dropdown = widgets.Dropdown(
+    options=[str(year) for year in capacity_df['Year'].unique()],
+    description='Select Year:',
+    disabled=False
+)
+
+output = widgets.Output()
+
+# Function to update the plot based on the selected year
+def update_plot(change):
+    year = change['new']
+    # Call plot_port_comparison for each feature
+    plt.figure(figsize=(15, 6))
+    plot_port_comparison(capacity_df, year, 'Capacity')
+    plot_port_comparison(traffic_df, year, 'Traffic')
+    plot_port_comparison(utilization_df, year, 'Utilization')
+    plot_port_comparison(trt_df, year, 'TRT')
+    plot_port_comparison(output_df, year, 'Output')
+    plot_port_comparison(pre_berthing_df, year, 'Pre-Berthing')
+
+# Bind the year dropdown to the update_plot function
+year_dropdown.observe(update_plot, names='value')
+
+# Display the dropdown and output area
+display(year_dropdown, output)
