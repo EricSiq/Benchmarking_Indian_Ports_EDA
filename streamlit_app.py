@@ -192,4 +192,5 @@ if selected_year:
     plot_port_comparison(traffic_df, selected_year, 'Traffic')
     plot_port_comparison(utilization_df, selected_year, 'Utilization')
     plot_port_comparison(trt_df, selected_year, 'TRT')
-    plot_port_comparison(output_df,
+    plot_port_comparison(output_df, selected_year, 'Output')
+
