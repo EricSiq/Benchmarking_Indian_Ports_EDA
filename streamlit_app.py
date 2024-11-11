@@ -197,8 +197,11 @@ if 'capacity_df' in locals() and capacity_df is not None:
 
 # TRT Performance analysis
 if trt_df is not None:
-    st.write("How does Turn Round Time (TRT) vary across major ports, and which port is performing the best?")
-    port_trt = trt_df.mean()
+    # Convert all columns to numeric (ignoring errors for non-numeric columns)
+    trt_df = trt_df.apply(pd.to_numeric, errors='coerce')
+
+    # Now calculate the mean across all numeric columns
+    port_trt = trt_df.mean(numeric_only=True)  # This ensures only numeric columns are considered
     best_performing_port = port_trt.idxmin()
     st.write(f"Best Performing Port in terms of TRT: {best_performing_port} with a TRT of {port_trt[best_performing_port]:.2f} days")
 
