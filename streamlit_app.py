@@ -169,6 +169,41 @@ def plot_port_comparison(metric_df, year, metric_name):
         value_vars=[col for col in metric_df.columns if col not in ['Year', 'All Ports']]
     )
 
+    plt.figure(figsize=(15, 6))
+    sns.barplot(x='variable', y='value', data=year_data)
+    plt.title(f'{metric_name} Comparison Across Ports ({year})')
+    plt.xticks(rotation=45)
+    plt.xlabel('Ports')
+    plt.ylabel(metric_name)
+    plt.tight_layout()
+    st.pyplot(plt)  # Use Streamlit's built-in pyplot to display plots
+    plt.close()
+
+# Streamlit dropdown for selecting year
+if 'capacity_df' in locals() and capacity_df is not None:
+    year_options = [str(year) for year in capacity_df['Year'].unique()]
+    selected_year = st.selectbox('Select Year:', year_options)
+
+    # Display and update plots based on selected year
+    if selected_year:
+        st.write(f"Showing data for the year: {selected_year}")
+        
+        # Plot each metric for the selected year
+        plot_port_comparison(capacity_df, selected_year, 'Capacity')
+        plot_port_comparison(traffic_df, selected_year, 'Traffic')
+        plot_port_comparison(utilization_df, selected_year, 'Utilization')
+        plot_port_comparison(trt_df, selected_year, 'TRT')
+        plot_port_comparison(output_df, selected_year, 'Output')
+
+# Check if all columns in trt_df are numeric, and convert them to numeric if needed
+if trt_df is not None:
+    # Convert all columns to numeric (ignoring errors for non-numeric columns)
+    trt_df = trt_df.apply(pd.to_numeric, errors='coerce')
+
+    # Now calculate the mean across all numeric columns
+    port_trt = trt_df.mean(numeric_only=True)  # This ensures only numeric columns are considered
+    best_performing_port = port_trt.idxmin()
+    st.write(f"Best Performing Port in terms of TRT: {best_performing_port} with a TRT of {port_trt[best_performing_port]:.2f} days")
 def analyze_trt_performance(trt_df):
     # Calculate average TRT for each port
     port_cols = [col for col in trt_df.columns if col not in ['Year', 'All Ports']]
@@ -196,30 +231,3 @@ def analyze_trt_performance(trt_df):
     st.pyplot(plt)
 
     return performance_summary
-
-# Streamlit dropdown for selecting year
-if 'capacity_df' in locals() and capacity_df is not None:
-    year_options = [str(year) for year in capacity_df['Year'].unique()]
-    selected_year = st.selectbox('Select Year:', year_options)
-
-    # Display and update plots based on selected year
-    if selected_year:
-        st.write(f"Showing data for the year: {selected_year}")
-        
-        # Plot each metric for the selected year
-        plot_port_comparison(capacity_df, selected_year, 'Capacity')
-        plot_port_comparison(traffic_df, selected_year, 'Traffic')
-        plot_port_comparison(utilization_df, selected_year, 'Utilization')
-        plot_port_comparison(trt_df, selected_year, 'TRT')
-        plot_port_comparison(output_df, selected_year, 'Output')
-
-# TRT Performance analysis
-if trt_df is not None:
-    # Convert all columns to numeric (ignoring errors for non-numeric columns)
-    trt_df = trt_df.apply(pd.to_numeric, errors='coerce')
-
-    # Now calculate the mean across all numeric columns
-    port_trt = trt_df.mean(numeric_only=True)  # This ensures only numeric columns are considered
-    best_performing_port = port_trt.idxmin()
-    st.write(f"Best Performing Port in terms of TRT: {best_performing_port} with a TRT of {port_trt[best_performing_port]:.2f} days")
-
