@@ -283,54 +283,42 @@ def analyze_port_correlations(port_name):
     })
 
     return correlation_df.corr()
-def analyze_output_efficiency(output_df, capacity_df, capacity_thresholds):
-    """Analyzes output per ship berth day relative to port capacity and compares across capacity groups."""
-    # Identify port columns
+def analyze_output_efficiency(output_df, capacity_df):
+    """Analyzes output per ship berth day relative to port capacity using an enhanced scatter plot."""
+    # Identify the port columns (excluding 'Year' and 'All Ports')
     port_cols = [col for col in output_df.columns if col not in ['Year', 'All Ports']]
     
-    # Calculate average output per ship berth day for each port
+    # Calculate average output and capacity for each port
     avg_output = output_df[port_cols].mean()
-    
-    # Calculate average capacity for each port
     avg_capacity = capacity_df[port_cols].mean()
     
-    # Create a DataFrame to store output and capacity information
-    comparison_df = pd.DataFrame({
-        'Output per Ship Berth Day': avg_output,
-        'Capacity': avg_capacity
+    # Calculate efficiency ratio (output per unit capacity)
+    efficiency_ratio = (avg_output / avg_capacity).sort_values(ascending=False)
+    
+    # Prepare data for scatter plot
+    plot_data = pd.DataFrame({
+        'Port': port_cols,
+        'Average Capacity': avg_capacity,
+        'Average Output per Ship Berth Day': avg_output,
+        'Efficiency Ratio': efficiency_ratio
     })
     
-    # Categorize ports based on capacity thresholds (small, medium, large ports)
-    comparison_df['Capacity Group'] = pd.cut(comparison_df['Capacity'], bins=capacity_thresholds, labels=["Small", "Medium", "Large"])
-    
-    # Calculate output efficiency (output per unit capacity) for each port
-    comparison_df['Efficiency'] = comparison_df['Output per Ship Berth Day'] / comparison_df['Capacity']
-    
-    # Calculate the average efficiency by capacity group
-    efficiency_by_group = comparison_df.groupby('Capacity Group')['Efficiency'].mean()
-    
-    # Plot output efficiency across capacity groups
+    # Create a scatter plot with 'Average Capacity' on x-axis and 'Average Output per Ship Berth Day' on y-axis
     plt.figure(figsize=(10, 6))
-    sns.barplot(x=efficiency_by_group.index, y=efficiency_by_group.values)
-    plt.title('Output Efficiency per Ship Berth Day by Capacity Group')
-    plt.xlabel('Capacity Group')
-    plt.ylabel('Average Output Efficiency')
-    plt.tight_layout()
-    st.pyplot(plt)
+    sns.scatterplot(data=plot_data, x='Average Capacity', y='Average Output per Ship Berth Day', 
+                    size='Efficiency Ratio', hue='Efficiency Ratio', palette='coolwarm', legend=None, sizes=(50, 200))
     
-    # Display comparison DataFrame
-    st.write("Port Output Efficiency Comparison by Capacity Group:")
-    st.dataframe(comparison_df)
+    # Annotate each point with the port name
+    for i, port in enumerate(port_cols):
+        plt.text(avg_capacity[port], avg_output[port], port, fontsize=9, ha='right')
+    
+    plt.xlabel('Average Capacity')
+    plt.ylabel('Average Output per Ship Berth Day')
+    plt.title('Port Output Efficiency vs Capacity (Enhanced Scatter Plot)')
+    plt.tight_layout()
+    plt.show()
 
-    return comparison_df, efficiency_by_group
+    return efficiency_ratio
 
-# Example usage:
-# Assuming output_df and capacity_df are already loaded, and capacity thresholds are defined
-capacity_thresholds = [0, 500000, 1000000, 2000000]  # Define thresholds for small, medium, and large ports
-comparison_df, efficiency_by_group = analyze_output_efficiency(output_df, capacity_df, capacity_thresholds)
-
-# Display the efficiency by group
-st.write("Efficiency by Capacity Group:")
-st.dataframe(efficiency_by_group)
-
-
+# Example usage (assuming output_df and capacity_df are defined):
+analyze_output_efficiency(output_df, capacity_df)
