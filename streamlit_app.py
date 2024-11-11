@@ -180,82 +180,25 @@ def plot_port_comparison(metric_df, year, metric_name):
     plt.close()
 
 # Streamlit dropdown for selecting year
-year_options = [str(year) for year in capacity_df['Year'].unique()]
-selected_year = st.selectbox('Select Year:', year_options)
-
-# Display and update plots based on selected year
-if selected_year:
-    st.write(f"Showing data for the year: {selected_year}")
-    
-    # Plot each metric for the selected year
-    plot_port_comparison(capacity_df, selected_year, 'Capacity')
-    plot_port_comparison(traffic_df, selected_year, 'Traffic')
-    plot_port_comparison(utilization_df, selected_year, 'Utilization')
-    plot_port_comparison(trt_df, selected_year, 'TRT')
-    plot_port_comparison(output_df, selected_year, 'Output')
-    
-print("How does Turn Round Time (TRT) vary across major ports, and which ports consistently show the best performance?")
-def analyze_trt_performance(trt_df):
-    # Calculate average TRT for each port
-    port_cols = [col for col in trt_df.columns if col not in ['Year', 'All Ports']]
-    avg_trt = trt_df[port_cols].mean().sort_values()
-
-    # Calculate TRT trend (improvement rate)
-    trt_trend = trt_df[port_cols].apply(lambda x: stats.linregress(range(len(x)), x)[0])
-
-    # Create performance summary
-    performance_summary = pd.DataFrame({
-        'Average_TRT': avg_trt,
-        'TRT_Trend': trt_trend
-    })
-
-    # Plot average TRT comparison
-    plt.figure(figsize=(12, 6))
-    sns.barplot(x=avg_trt.index, y=avg_trt.values)
-    plt.title('Average Turn Round Time by Port')
-    plt.xticks(rotation=45)
-    plt.ylabel('Average TRT (days)')
-    plt.xlabel('Port')
-    plt.tight_layout()
-    
-    # Display plot using Streamlit
-    st.pyplot(plt)
-    
-    return performance_summary
-analyze_trt_performance(trt_df)
-# Function to read a CSV file and handle EmptyDataError
-def safe_read_csv(file):
-    try:
-        return pd.read_csv(file)
-    except pd.errors.EmptyDataError:
-        st.write(f"Error: The uploaded file {file.name} is empty. Please upload a valid file.")
-        return None
-
-# Read and display the Capacity dataset
-capacity_df = None  # Initialize as None to ensure it is available globally
-
-if capacity_file is not None:
-    capacity_df = safe_read_csv(capacity_file)
-
-    if capacity_df is not None:
-        st.write("Capacity DataFrame - First Few Rows:")
-        st.dataframe(capacity_df.head())
-        st.write(f"Missing Values in Capacity DataFrame:")
-        st.write(capacity_df.isnull().sum())
-
-# Proceed only if `capacity_df` is loaded
-if capacity_df is not None:
-    st.write("Capacity DataFrame Loaded Successfully!")
-else:
-    st.write("Please upload the Capacity data to proceed.")
-
-# If the DataFrame is available, display year options for the dropdown
-if capacity_df is not None:
+if 'capacity_df' in locals() and capacity_df is not None:
     year_options = [str(year) for year in capacity_df['Year'].unique()]
     selected_year = st.selectbox('Select Year:', year_options)
 
+    # Display and update plots based on selected year
     if selected_year:
         st.write(f"Showing data for the year: {selected_year}")
-        # Further analysis code for the selected year here...
-else:
-    st.write("Please upload the Capacity data to proceed.")
+        
+        # Plot each metric for the selected year
+        plot_port_comparison(capacity_df, selected_year, 'Capacity')
+        plot_port_comparison(traffic_df, selected_year, 'Traffic')
+        plot_port_comparison(utilization_df, selected_year, 'Utilization')
+        plot_port_comparison(trt_df, selected_year, 'TRT')
+        plot_port_comparison(output_df, selected_year, 'Output')
+
+# TRT Performance analysis
+if trt_df is not None:
+    st.write("How does Turn Round Time (TRT) vary across major ports, and which port is performing the best?")
+    port_trt = trt_df.mean()
+    best_performing_port = port_trt.idxmin()
+    st.write(f"Best Performing Port in terms of TRT: {best_performing_port} with a TRT of {port_trt[best_performing_port]:.2f} days")
+
