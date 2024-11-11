@@ -202,13 +202,5 @@ def analyze_port_correlations(port_name):
 year_options = [str(year) for year in capacity_df['Year'].unique()]
 selected_year = st.selectbox('Select Year:', year_options)
 
-# Display and update plots based on selected year
-if selected_year:
-    st.write(f"Showing data for the year: {selected_year}")
-    plot_port_comparison(utilization_df, selected_year, 'Utilization')
-    plot_port_comparison(trt_df, selected_year, 'TRT')
-    plot_port_comparison(output_df, selected_year, 'Output')
-    # Removed the calls to plot_port_comparison here
-    # plot_port_comparison(capacity_df, selected_year, 'Capacity')
-    #plot_port_comparison(traffic_df, selected_year, 'Traffic')
+
     
