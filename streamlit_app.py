@@ -37,13 +37,92 @@ def safe_read_csv(file):
     except Exception as e:
         st.write(f"Error: Unable to read the file {file.name}. {str(e)}")
         return None
+
+# Function to analyze Turn Round Time (TRT) performance
+def analyze_trt_performance(trt_df):
+    # Check if the required columns are present in the dataframe
+    if 'Year' not in trt_df.columns:
+        st.write("Error: TRT data is missing or invalid.")
+        return None
+
+    # Calculate average TRT for each port
+    port_cols = [col for col in trt_df.columns if col not in ['Year', 'All Ports']]
+    avg_trt = trt_df[port_cols].mean().sort_values()
+
+    # Calculate TRT trend (improvement rate)
+    trt_trend = trt_df[port_cols].apply(lambda x: stats.linregress(range(len(x)), x)[0])
+
+    # Create performance summary
+    performance_summary = pd.DataFrame({
+        'Average_TRT': avg_trt,
+        'TRT_Trend': trt_trend
+    })
+
+    # Plot average TRT comparison
+    plt.figure(figsize=(12, 6))
+    sns.barplot(x=avg_trt.index, y=avg_trt.values)
+    plt.title('Average Turn Round Time by Port')
+    plt.xticks(rotation=45)
+    plt.ylabel('Average TRT (days)')
+    plt.xlabel('Port')
+    plt.tight_layout()
+
+    # Display plot using Streamlit
+    st.pyplot(plt)
+
+    return performance_summary
+
 # Ensure TRT dataframe is loaded
+trt_df = pd.DataFrame()  # Initialize an empty DataFrame
+
 if trt_file is not None:
     trt_df = safe_read_csv(trt_file)
-    st.write("TRT DataFrame Loaded Successfully!")
-    analyze_trt_performance(trt_df)
+    if trt_df is not None:
+        st.write("TRT DataFrame Loaded Successfully!")
+        analyze_trt_performance(trt_df)  # Call the analysis function only if the file is loaded successfully
 else:
     st.write("Please upload the TRT file to proceed.")
+
+# Function to display data information
+def display_data_info(df, name):
+    if df is not None:
+        if clean_data:
+            df = clean_dataframe(df)
+        st.write(f"{name} - First Few Rows:")
+        st.dataframe(df.head())
+        st.write(f"Missing Values in {name}:")
+        st.write(df.isnull().sum())
+
+# Read and display other datasets
+if traffic_file is not None:
+    traffic_df = safe_read_csv(traffic_file)
+    display_data_info(traffic_df, "Traffic DataFrame")
+
+if capacity_file is not None:
+    capacity_df = safe_read_csv(capacity_file)
+    display_data_info(capacity_df, "Capacity DataFrame")
+
+if utilization_file is not None:
+    utilization_df = safe_read_csv(utilization_file)
+    display_data_info(utilization_df, "Utilization DataFrame")
+
+if pre_berthing_file is not None:
+    pre_berthing_df = safe_read_csv(pre_berthing_file)
+    display_data_info(pre_berthing_df, "Pre-Berthing Detention DataFrame")
+
+if output_file is not None:
+    output_df = safe_read_csv(output_file)
+    display_data_info(output_df, "Output per Ship Berth Day DataFrame")
+
+# Ensure all required data is available for additional analysis
+if all([trt_df is not None, traffic_df is not None, capacity_df is not None, utilization_df is not None, output_df is not None]):
+    port_name = st.selectbox("Select Port", options=capacity_df.columns[1:], index=0)
+    
+    # Analyze and display statistics for the selected port
+    stats_df = analyze_port_statistics(port_name)
+    if not stats_df.empty:
+        st.write(f"Statistics for Port: {port_name}")
+        st.dataframe(stats_df)
 # Function to analyze Turn Round Time (TRT) performance
 def analyze_trt_performance(trt_df):
     # Check if the required columns are present in the dataframe
@@ -89,39 +168,6 @@ def display_data_info(df, name):
         st.dataframe(df.head())
         st.write(f"Missing Values in {name}:")
         st.write(df.isnull().sum())
-
-# Read and display each dataset
-if trt_file is not None:
-    trt_df = safe_read_csv(trt_file)
-    display_data_info(trt_df, "TRT DataFrame")
-
-if traffic_file is not None:
-    traffic_df = safe_read_csv(traffic_file)
-    display_data_info(traffic_df, "Traffic DataFrame")
-
-if capacity_file is not None:
-    capacity_df = safe_read_csv(capacity_file)
-    display_data_info(capacity_df, "Capacity DataFrame")
-
-if utilization_file is not None:
-    utilization_df = safe_read_csv(utilization_file)
-    display_data_info(utilization_df, "Utilization DataFrame")
-
-if pre_berthing_file is not None:
-    pre_berthing_df = safe_read_csv(pre_berthing_file)
-    display_data_info(pre_berthing_df, "Pre-Berthing Detention DataFrame")
-
-if output_file is not None:
-    output_df = safe_read_csv(output_file)
-    display_data_info(output_df, "Output per Ship Berth Day DataFrame")
-
-# Additional analysis for ports (if all data is available)
-if all([trt_df is not None, traffic_df is not None, capacity_df is not None, utilization_df is not None, output_df is not None]):
-    port_name = st.selectbox(
-        "Select Port",
-        options=capacity_df.columns[1:],  # Assuming first column is 'Year'
-        index=0
-    )
 
     # Analyze and display statistics for the selected port
     stats_df = analyze_port_statistics(port_name)
