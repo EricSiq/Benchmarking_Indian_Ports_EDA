@@ -222,3 +222,4 @@ def analyze_trt_performance(trt_df):
     st.pyplot(plt)
     
     return performance_summary
+analyze_trt_performance(trt_df)
