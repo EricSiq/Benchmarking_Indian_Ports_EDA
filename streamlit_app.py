@@ -232,6 +232,8 @@ def safe_read_csv(file):
         return None
 
 # Read and display the Capacity dataset
+capacity_df = None  # Initialize as None to ensure it is available globally
+
 if capacity_file is not None:
     capacity_df = safe_read_csv(capacity_file)
 
@@ -241,13 +243,19 @@ if capacity_file is not None:
         st.write(f"Missing Values in Capacity DataFrame:")
         st.write(capacity_df.isnull().sum())
 
-# Streamlit dropdown for selecting year (only if capacity_df is defined)
-if 'capacity_df' in locals() and capacity_df is not None:
+# Proceed only if `capacity_df` is loaded
+if capacity_df is not None:
+    st.write("Capacity DataFrame Loaded Successfully!")
+else:
+    st.write("Please upload the Capacity data to proceed.")
+
+# If the DataFrame is available, display year options for the dropdown
+if capacity_df is not None:
     year_options = [str(year) for year in capacity_df['Year'].unique()]
     selected_year = st.selectbox('Select Year:', year_options)
 
     if selected_year:
         st.write(f"Showing data for the year: {selected_year}")
-        # You can add further code to display the data for the selected year
+        # Further analysis code for the selected year here...
 else:
     st.write("Please upload the Capacity data to proceed.")
