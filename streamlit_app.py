@@ -223,3 +223,31 @@ def analyze_trt_performance(trt_df):
     
     return performance_summary
 analyze_trt_performance(trt_df)
+# Function to read a CSV file and handle EmptyDataError
+def safe_read_csv(file):
+    try:
+        return pd.read_csv(file)
+    except pd.errors.EmptyDataError:
+        st.write(f"Error: The uploaded file {file.name} is empty. Please upload a valid file.")
+        return None
+
+# Read and display the Capacity dataset
+if capacity_file is not None:
+    capacity_df = safe_read_csv(capacity_file)
+
+    if capacity_df is not None:
+        st.write("Capacity DataFrame - First Few Rows:")
+        st.dataframe(capacity_df.head())
+        st.write(f"Missing Values in Capacity DataFrame:")
+        st.write(capacity_df.isnull().sum())
+
+# Streamlit dropdown for selecting year (only if capacity_df is defined)
+if 'capacity_df' in locals() and capacity_df is not None:
+    year_options = [str(year) for year in capacity_df['Year'].unique()]
+    selected_year = st.selectbox('Select Year:', year_options)
+
+    if selected_year:
+        st.write(f"Showing data for the year: {selected_year}")
+        # You can add further code to display the data for the selected year
+else:
+    st.write("Please upload the Capacity data to proceed.")
