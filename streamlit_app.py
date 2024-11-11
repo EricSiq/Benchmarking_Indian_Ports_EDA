@@ -27,12 +27,33 @@ pre_berthing_file = st.file_uploader("Upload Pre-Berthing Detention CSV file", t
 output_file = st.file_uploader("Upload Output per Ship Berth Day CSV file", type="csv")
 
 # Function to safely read CSV files
+# Function to safely read CSV files
 def safe_read_csv(file):
     try:
         return pd.read_csv(file)
     except pd.errors.EmptyDataError:
         st.write(f"Error: The uploaded file {file.name} is empty. Please upload a valid file.")
         return None
+    except Exception as e:
+        st.write(f"Error: Unable to read the file {file.name}. {str(e)}")
+        return None
+
+# Ensure trt_df is properly loaded
+if trt_file is not None:
+    trt_df = safe_read_csv(trt_file)
+    if trt_df is not None:
+        st.write("TRT DataFrame Loaded Successfully!")
+    else:
+        st.write("Failed to load TRT DataFrame.")
+else:
+    trt_df = None  # Define as None if the file is not uploaded yet
+
+# Proceed with analysis only if trt_df is loaded
+if trt_df is not None:
+    # Your TRT analysis code goes here
+    analyze_trt_performance(trt_df)
+else:
+    st.write("Please upload the TRT file to proceed.")
 
 # Display information about the uploaded data
 def display_data_info(df, name):
