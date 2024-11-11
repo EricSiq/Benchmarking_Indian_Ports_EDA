@@ -283,43 +283,8 @@ def analyze_port_correlations(port_name):
     })
 
     return correlation_df.corr()
-def analyze_output_efficiency(output_df, capacity_df):
-    """Analyzes output per ship berth day relative to port capacity"""
-    # Identify port columns
-    port_cols = [col for col in output_df.columns if col not in ['Year', 'All Ports']]
-
-    # Calculate average output and capacity for each port
-    avg_output = output_df[port_cols].mean()
-    avg_capacity = capacity_df[port_cols].mean()
-
-    # Calculate efficiency ratio (output per unit capacity)
-    efficiency_ratio = (avg_output / avg_capacity).sort_values(ascending=False)
-
-    # Create scatter plot to visualize efficiency vs capacity
-    plt.figure(figsize=(10, 6))
-    plt.scatter(avg_capacity, avg_output)
-
-    # Annotate the plot with port names
-    for i, port in enumerate(port_cols):
-        plt.annotate(port, (avg_capacity[port], avg_output[port]))
-
-    plt.xlabel('Average Capacity')
-    plt.ylabel('Average Output per Ship Berth Day')
-    plt.title('Port Output Efficiency vs Capacity')
-    plt.tight_layout()
-
-    # Display the plot
-    plt.show()
-
-    return efficiency_ratio
-
-# Example usage:
-# Assuming output_df and capacity_df are already defined and contain the necessary data
-analyze_output_efficiency(output_df, capacity_df)
-
-def compare_output_efficiency_across_capacity_groups(output_df, capacity_df, capacity_thresholds):
-    """Compares output per ship berth day across ports of similar size (capacity)."""
-    
+def analyze_output_efficiency(output_df, capacity_df, capacity_thresholds):
+    """Analyzes output per ship berth day relative to port capacity and compares across capacity groups."""
     # Identify port columns
     port_cols = [col for col in output_df.columns if col not in ['Year', 'All Ports']]
     
@@ -335,32 +300,37 @@ def compare_output_efficiency_across_capacity_groups(output_df, capacity_df, cap
         'Capacity': avg_capacity
     })
     
-    # Categorize ports based on capacity thresholds (e.g., small, medium, large ports)
+    # Categorize ports based on capacity thresholds (small, medium, large ports)
     comparison_df['Capacity Group'] = pd.cut(comparison_df['Capacity'], bins=capacity_thresholds, labels=["Small", "Medium", "Large"])
     
-    # Calculate output efficiency within each capacity group
-    efficiency_by_group = comparison_df.groupby('Capacity Group').mean()
+    # Calculate output efficiency (output per unit capacity) for each port
+    comparison_df['Efficiency'] = comparison_df['Output per Ship Berth Day'] / comparison_df['Capacity']
     
-    # Plot comparison of output per ship berth day across capacity groups
+    # Calculate the average efficiency by capacity group
+    efficiency_by_group = comparison_df.groupby('Capacity Group')['Efficiency'].mean()
+    
+    # Plot output efficiency across capacity groups
     plt.figure(figsize=(10, 6))
-    sns.barplot(x=efficiency_by_group.index, y=efficiency_by_group['Output per Ship Berth Day'])
-    plt.title('Output per Ship Berth Day by Port Capacity Group')
+    sns.barplot(x=efficiency_by_group.index, y=efficiency_by_group.values)
+    plt.title('Output Efficiency per Ship Berth Day by Capacity Group')
     plt.xlabel('Capacity Group')
-    plt.ylabel('Average Output per Ship Berth Day')
+    plt.ylabel('Average Output Efficiency')
     plt.tight_layout()
     st.pyplot(plt)
     
+    # Display comparison DataFrame
+    st.write("Port Output Efficiency Comparison by Capacity Group:")
+    st.dataframe(comparison_df)
+
     return comparison_df, efficiency_by_group
 
 # Example usage:
 # Assuming output_df and capacity_df are already loaded, and capacity thresholds are defined
 capacity_thresholds = [0, 500000, 1000000, 2000000]  # Define thresholds for small, medium, and large ports
-comparison_df, efficiency_by_group = compare_output_efficiency_across_capacity_groups(output_df, capacity_df, capacity_thresholds)
+comparison_df, efficiency_by_group = analyze_output_efficiency(output_df, capacity_df, capacity_thresholds)
 
-# Display the comparison data
-st.write("Port Comparison by Capacity Group:")
-st.dataframe(comparison_df)
-
+# Display the efficiency by group
 st.write("Efficiency by Capacity Group:")
 st.dataframe(efficiency_by_group)
+
 
