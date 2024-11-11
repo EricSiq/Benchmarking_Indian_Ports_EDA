@@ -108,6 +108,7 @@ if trt_file and traffic_file and capacity_file and utilization_file:
 
 else:
     st.write("Please upload all required CSV files.")
+
 def plot_metric_trends(df, metric_name):
     plt.figure(figsize=(10, 6))
     for port in [col for col in df.columns if col not in ['Year', 'All Ports']]:
@@ -142,15 +143,12 @@ if 'output_df' in locals() and output_df is not None:
 if 'pre_berthing_df' in locals() and pre_berthing_df is not None:
     st.write("Pre-Berthing Trends Across Ports")
     plot_metric_trends(pre_berthing_df, 'Pre-Berthing')
+
 # Function to analyze port correlations
 def analyze_port_correlations(port_name):
-    if port_name not in capacity_df.columns:
-        st.write(f"Port {port_name} not found in capacity data.")
-        return pd.DataFrame()
-
-    # Check if output_df is defined and contains the port
-    if 'output_df' not in locals() or port_name not in output_df.columns:
-        st.write(f"Port {port_name} not found in Output data.")
+    # Check if port exists in capacity_df and output_df
+    if port_name not in capacity_df.columns or port_name not in output_df.columns:
+        st.write(f"Port {port_name} not found in capacity or output data.")
         return pd.DataFrame()
 
     # Create the correlation dataframe only if all necessary data is available
@@ -164,30 +162,18 @@ def analyze_port_correlations(port_name):
 
     return correlation_df.corr()
 
-# Calculate correlations for each port
-port_correlations = {
-    'Kolkata': analyze_port_correlations('Kolkata'),
-    'Haldia': analyze_port_correlations('Haldia'),
-    'Paradip': analyze_port_correlations('Paradip'),
-    'Vishakhapatnam': analyze_port_correlations('Vishakhapatnam'),
-    'Ennore': analyze_port_correlations('Ennore'),
-    'Chennai': analyze_port_correlations('Chennai'),
-    'Tuticorin': analyze_port_correlations('Tuticorin'),
-    'Cochin': analyze_port_correlations('Cochin'),
-    'New Mangalore': analyze_port_correlations('New Mangalore'),
-    'Mormugoa': analyze_port_correlations('Mormugoa'),
-    'J.L.Nehru': analyze_port_correlations('J.L.Nehru'),
-    'Mumbai': analyze_port_correlations('Mumbai'),
-    'Kandla': analyze_port_correlations('Kandla')
-}
+# Calculate correlations for each port dynamically based on available ports
+available_ports = [port for port in ['Kolkata', 'Haldia', 'Paradip', 'Vishakhapatnam', 'Ennore', 'Chennai', 'Tuticorin', 
+                                     'Cochin', 'New Mangalore', 'Mormugoa', 'J.L.Nehru', 'Mumbai', 'Kandla'] 
+                   if port in capacity_df.columns and port in output_df.columns]
 
 # Streamlit select box for choosing a port
-selected_port = st.selectbox("Select Port for Correlation Analysis:", list(port_correlations.keys()))
+selected_port = st.selectbox("Select Port for Correlation Analysis:", available_ports)
 
 # Display correlation analysis for the selected port
 if selected_port:
     st.write(f"Correlation Analysis for {selected_port}:")
-    correlation_data = port_correlations.get(selected_port)
+    correlation_data = analyze_port_correlations(selected_port)
     if not correlation_data.empty:
         st.dataframe(correlation_data)  # Display correlation table
     else:
