@@ -194,7 +194,43 @@ def analyze_port_correlations(port_name):
     })
 
     return correlation_df.corr()
+def plot_port_comparison(df, selected_year, metric_name):
+    # Filter data for the selected year
+    year_df = df[df['Year'] == int(selected_year)]
 
+    if year_df.empty:
+        st.write(f"No data available for the year {selected_year}.")
+        return
+    
+    # Plot the data for each port in the selected year
+    plt.figure(figsize=(10, 6))
+    ports = [col for col in year_df.columns if col != 'Year']  # Exclude the 'Year' column
+    for port in ports:
+        plt.plot(year_df['Year'], year_df[port], label=port)
+    plt.title(f'{metric_name} for Ports in {selected_year}')
+    plt.xlabel('Port')
+    plt.ylabel(metric_name)
+    plt.xticks(rotation=45)
+    plt.legend(loc='best')
+    plt.tight_layout()
+    st.pyplot(plt)
+    plt.close()  # Close the plot to free memory
+
+# Main code for Streamlit app
+if 'capacity_df' in locals() and capacity_df is not None:
+    year_options = [str(year) for year in capacity_df['Year'].unique()]
+    selected_year = st.selectbox('Select Year:', year_options)
+
+    # Display and update plots based on selected year
+    if selected_year:
+        st.write(f"Showing data for the year: {selected_year}")
+        
+        # Plot each metric for the selected year
+        plot_port_comparison(capacity_df, selected_year, 'Capacity')
+        plot_port_comparison(traffic_df, selected_year, 'Traffic')
+        plot_port_comparison(utilization_df, selected_year, 'Utilization')
+        plot_port_comparison(trt_df, selected_year, 'TRT')
+        plot_port_comparison(output_df, selected_year, 'Output')
 # Streamlit dropdown for selecting year
 if 'capacity_df' in locals() and capacity_df is not None:
     year_options = [str(year) for year in capacity_df['Year'].unique()]
