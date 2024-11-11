@@ -195,9 +195,13 @@ def analyze_port_correlations(port_name):
 
     return correlation_df.corr()
 def plot_port_comparison(df, selected_year, metric_name):
+    # Ensure 'Year' column is numeric
+    df['Year'] = pd.to_numeric(df['Year'], errors='coerce')  # Convert to numeric, setting errors as NaT
+
     # Filter data for the selected year
     year_df = df[df['Year'] == int(selected_year)]
 
+    # Handle case where no data is found for the selected year
     if year_df.empty:
         st.write(f"No data available for the year {selected_year}.")
         return
