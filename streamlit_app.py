@@ -164,7 +164,6 @@ def analyze_port_correlations(port_name):
     return correlation_df.corr()
 
 # Create a list of available ports for correlation analysis
-if 'capacity_df' in locals() and 'output_df' in locals():
     available_ports = [port for port in ['Kolkata', 'Haldia', 'Paradip', 'Vishakhapatnam', 'Ennore', 'Chennai', 'Tuticorin', 
                                          'Cochin', 'New Mangalore', 'Mormugoa', 'J.L.Nehru', 'Mumbai', 'Kandla'] 
                        if port in capacity_df.columns and port in output_df.columns]
@@ -180,5 +179,3 @@ if 'capacity_df' in locals() and 'output_df' in locals():
             st.dataframe(correlation_data)  # Display correlation table
         else:
             st.write("No correlation data available for this port.")
-else:
-    st.write("Please upload the required files for analysis.")
