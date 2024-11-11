@@ -195,11 +195,18 @@ def analyze_port_correlations(port_name):
 
     return correlation_df.corr()
 def plot_port_comparison(df, selected_year, metric_name):
-    # Ensure 'Year' column is numeric
-    df['Year'] = pd.to_numeric(df['Year'], errors='coerce')  # Convert to numeric, setting errors as NaT
+    # Ensure 'Year' column is numeric and handle invalid data
+    df['Year'] = pd.to_numeric(df['Year'], errors='coerce')  # Convert 'Year' to numeric, invalid values become NaN
 
+    # Check if selected_year is valid
+    try:
+        selected_year = int(selected_year)  # Convert selected_year to integer
+    except ValueError:
+        st.error("Invalid year selected.")
+        return
+    
     # Filter data for the selected year
-    year_df = df[df['Year'] == int(selected_year)]
+    year_df = df[df['Year'] == selected_year]
 
     # Handle case where no data is found for the selected year
     if year_df.empty:
@@ -219,7 +226,6 @@ def plot_port_comparison(df, selected_year, metric_name):
     plt.tight_layout()
     st.pyplot(plt)
     plt.close()  # Close the plot to free memory
-
 # Main code for Streamlit app
 if 'capacity_df' in locals() and capacity_df is not None:
     year_options = [str(year) for year in capacity_df['Year'].unique()]
