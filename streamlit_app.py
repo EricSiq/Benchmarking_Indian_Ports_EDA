@@ -198,25 +198,24 @@ def analyze_port_correlations(port_name):
 def plot_port_comparison(df, selected_year, metric_name):
     # Ensure 'Year' column is numeric and handle invalid data
     try:
-        df['Year'] = pd.to_numeric(df['Year'], errors='coerce')  # Convert 'Year' to numeric, invalid values become NaN
+        # Convert 'Year' to numeric, invalid values will be converted to NaN
+        df['Year'] = pd.to_numeric(df['Year'], errors='coerce')
     except Exception as e:
         st.error(f"Error converting 'Year' column to numeric: {e}")
         return
-
+    
     # Handle NaN values in 'Year' column (they were invalid in the original data)
     if df['Year'].isnull().any():
         st.error("The 'Year' column contains invalid or missing values.")
         return
 
-    # Check if selected_year is valid
-    try:
-        selected_year = int(selected_year)  # Convert selected_year to integer
-    except ValueError:
-        st.error("Invalid year selected.")
+    # Check if selected_year is valid and if it exists in the data
+    if selected_year not in df['Year'].values:
+        st.error(f"Selected year {selected_year} is not present in the data.")
         return
 
     # Filter data for the selected year
-    year_df = df[df['Year'] == selected_year]
+    year_df = df[df['Year'] == int(selected_year)]
 
     # Handle case where no data is found for the selected year
     if year_df.empty:
@@ -236,22 +235,28 @@ def plot_port_comparison(df, selected_year, metric_name):
     plt.tight_layout()
     st.pyplot(plt)
     plt.close()  # Close the plot to free memory
-    
+
 # Main code for Streamlit app
 if 'capacity_df' in locals() and capacity_df is not None:
-    year_options = [str(year) for year in capacity_df['Year'].unique()]
-    selected_year = st.selectbox('Select Year:', year_options)
+    # Get unique years from the 'Year' column
+    year_options = [str(year) for year in capacity_df['Year'].dropna().unique()]
+    
+    # Ensure there are no empty values in year_options
+    if len(year_options) == 0:
+        st.error("No valid years found in the data.")
+    else:
+        selected_year = st.selectbox('Select Year:', year_options)
 
-    # Display and update plots based on selected year
-    if selected_year:
-        st.write(f"Showing data for the year: {selected_year}")
-        
-        # Plot each metric for the selected year
-        plot_port_comparison(capacity_df, selected_year, 'Capacity')
-        plot_port_comparison(traffic_df, selected_year, 'Traffic')
-        plot_port_comparison(utilization_df, selected_year, 'Utilization')
-        plot_port_comparison(trt_df, selected_year, 'TRT')
-        plot_port_comparison(output_df, selected_year, 'Output')
+        # Display and update plots based on selected year
+        if selected_year:
+            st.write(f"Showing data for the year: {selected_year}")
+
+            # Plot each metric for the selected year
+            plot_port_comparison(capacity_df, selected_year, 'Capacity')
+            plot_port_comparison(traffic_df, selected_year, 'Traffic')
+            plot_port_comparison(utilization_df, selected_year, 'Utilization')
+            plot_port_comparison(trt_df, selected_year, 'TRT')
+            plot_port_comparison(output_df, selected_year, 'Output')
 # Streamlit dropdown for selecting year
 if 'capacity_df' in locals() and capacity_df is not None:
     year_options = [str(year) for year in capacity_df['Year'].unique()]
