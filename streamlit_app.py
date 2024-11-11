@@ -197,10 +197,38 @@ def analyze_port_correlations(port_name):
     })
 
     return correlation_df.corr()
+def analyze_output_efficiency(output_df, capacity_df):
+    """Analyzes output per ship berth day relative to port capacity"""
+    # Identify port columns
+    port_cols = [col for col in output_df.columns if col not in ['Year', 'All Ports']]
 
-# Streamlit dropdown for selecting year
-year_options = [str(year) for year in capacity_df['Year'].unique()]
-selected_year = st.selectbox('Select Year:', year_options)
+    # Calculate average output and capacity for each port
+    avg_output = output_df[port_cols].mean()
+    avg_capacity = capacity_df[port_cols].mean()
 
+    # Calculate efficiency ratio (output per unit capacity)
+    efficiency_ratio = (avg_output / avg_capacity).sort_values(ascending=False)
+
+    # Create scatter plot to visualize efficiency vs capacity
+    plt.figure(figsize=(10, 6))
+    plt.scatter(avg_capacity, avg_output)
+
+    # Annotate the plot with port names
+    for i, port in enumerate(port_cols):
+        plt.annotate(port, (avg_capacity[port], avg_output[port]))
+
+    plt.xlabel('Average Capacity')
+    plt.ylabel('Average Output per Ship Berth Day')
+    plt.title('Port Output Efficiency vs Capacity')
+    plt.tight_layout()
+
+    # Display the plot
+    plt.show()
+
+    return efficiency_ratio
+
+# Example usage:
+# Assuming output_df and capacity_df are already defined and contain the necessary data
+analyze_output_efficiency(output_df, capacity_df)
 
     
