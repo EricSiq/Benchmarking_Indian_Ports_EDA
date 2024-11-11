@@ -155,6 +155,7 @@ def plot_metric_trends(df, metric_name):
     plt.close()  # Close the plot to free memory
 
 # Plotting trends for available data
+# Removed the calls to plot_port_comparison here
 if 'capacity_df' in locals() and capacity_df is not None:
     st.write("Capacity Trends Across Ports")
     plot_metric_trends(capacity_df, 'Capacity')
@@ -204,10 +205,10 @@ selected_year = st.selectbox('Select Year:', year_options)
 # Display and update plots based on selected year
 if selected_year:
     st.write(f"Showing data for the year: {selected_year}")
-    
-    # Plot each metric for the selected year
-    plot_port_comparison(capacity_df, selected_year, 'Capacity')
-    plot_port_comparison(traffic_df, selected_year, 'Traffic')
     plot_port_comparison(utilization_df, selected_year, 'Utilization')
     plot_port_comparison(trt_df, selected_year, 'TRT')
     plot_port_comparison(output_df, selected_year, 'Output')
+    # Removed the calls to plot_port_comparison here
+    # plot_port_comparison(capacity_df, selected_year, 'Capacity')
+    #plot_port_comparison(traffic_df, selected_year, 'Traffic')
+    
