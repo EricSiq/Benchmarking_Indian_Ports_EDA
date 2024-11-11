@@ -26,7 +26,7 @@ utilization_file = st.file_uploader("Upload Utilization CSV file", type="csv")
 pre_berthing_file = st.file_uploader("Upload Pre-Berthing Detention CSV file", type="csv")
 output_file = st.file_uploader("Upload Output per Ship Berth Day CSV file", type="csv")
 
-# Function to safely read CSV files
+trt_df = pd.DataFrame()  # Initialize an empty DataFrame or with your data
 # Function to safely read CSV files
 def safe_read_csv(file):
     try:
