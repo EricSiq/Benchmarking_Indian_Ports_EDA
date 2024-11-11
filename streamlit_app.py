@@ -169,7 +169,7 @@ def plot_port_comparison(metric_df, year, metric_name):
         value_vars=[col for col in metric_df.columns if col not in ['Year', 'All Ports']]
     )
 
-    def analyze_trt_performance(trt_df):
+def analyze_trt_performance(trt_df):
     # Calculate average TRT for each port
     port_cols = [col for col in trt_df.columns if col not in ['Year', 'All Ports']]
     avg_trt = trt_df[port_cols].mean().sort_values()
